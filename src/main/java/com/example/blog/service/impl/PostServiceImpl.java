@@ -8,6 +8,10 @@ import java.util.stream.Stream;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.example.blog.entities.Category;
@@ -15,10 +19,13 @@ import com.example.blog.entities.Post;
 import com.example.blog.entities.User;
 import com.example.blog.execeptions.ResourceNotFoundException;
 import com.example.blog.payloads.PostDto;
+import com.example.blog.payloads.PostResponse;
 import com.example.blog.repositories.CategoryRepo;
 import com.example.blog.repositories.PostRepo;
 import com.example.blog.repositories.UserReo;
 import com.example.blog.service.PostService;
+
+
 
 @Service
 public class PostServiceImpl implements PostService  {
@@ -85,14 +92,27 @@ public class PostServiceImpl implements PostService  {
 	}
 
 	@Override
-	public List<PostDto> getAllPost() {
-		// TODO Auto-generated method stub
+	public PostResponse  getAllPost(Integer pageNumber,Integer pageSize,String sortBy) {
+		// TODO Auto-generated method stub 
 		
-		List<Post> findAll = this.postRepo.findAll();
+		Pageable p=PageRequest.of(pageNumber, pageSize,Sort.by(sortBy));
 		
-	    List<PostDto> collect = findAll.stream().map(post->this.mapper.map(findAll, PostDto.class)).collect(Collectors.toList());
+		Page<Post> pagePost = this.postRepo.findAll(p);
 		
-		return collect;
+		  List<Post> content = pagePost.getContent();
+		
+		
+		
+	    List<PostDto> collect = content.stream().map(post->this.mapper.map(post, PostDto.class)).collect(Collectors.toList());
+		
+	    PostResponse  postResponse=new PostResponse();
+	    postResponse.setContent(collect);
+	    postResponse.setPageNumber(pagePost.getNumber());
+	    postResponse.setPageSize(pagePost.getSize());
+	    postResponse.setTotalElments(pagePost.getTotalElements());
+	    postResponse.setTotalPages(pagePost.getTotalPages());
+	    postResponse.setLastPage(pagePost.isLast());
+		return postResponse;
 	}
 
 	@Override
@@ -134,5 +154,7 @@ public class PostServiceImpl implements PostService  {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	
 
 }
